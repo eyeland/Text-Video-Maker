@@ -1,0 +1,23 @@
+{
+  "name": "text-video-maker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "bryant keys",
+  "license": "ISC",
+  "dependencies": {
+    "ffmpeg.js": "^4.2.9003",
+    "fluent-ffmpeg": "^2.1.2",
+    "get-pixels": "^3.3.3",
+    "gif-encoder-2": "^1.0.5",
+    "gifencoder": "^2.0.1",
+    "gifshot": "^0.4.5",
+    "google-tts-api": "^2.0.2",
+    "googleapis": "^126.0.1",
+    "jimp": "^0.22.10",
+    "text-to-image": "^5.2.0"
+  }
+}
