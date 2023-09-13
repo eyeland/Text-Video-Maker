@@ -1,13 +1,13 @@
 const fs = require("fs");
-const googleTTS = require("google-tts-api");
 const ffmpeg = require("fluent-ffmpeg");
 const { createCanvas } = require("canvas");
 const GIFEncoder = require("gif-encoder-2");
 const Jimp = require("jimp");
+const gtts = require("node-gtts")("en"); // Replace "en" with your desired language code
 
 const facts = [
-  "Fact 1: This is the first fact.",
-  "Fact 2: Here's another interesting fact.",
+  "Fact 1: | Honey never spoils | Archaeologists have found | pots of honey in |ancient Egyptian tombs | that are over | 3,000 years old | and still perfectly | edible.",
+
   // ... Add more facts
 ];
 
@@ -17,13 +17,15 @@ const createFolder = (folderName) => {
   }
 };
 
+const calculateFrameDelay = (words) => {
+  // Calculate the frame delay based on the number of words
+  const wordsPerSecond = 1.4; // Adjust this value as needed
+  const delayPerWord = 1000 / wordsPerSecond;
+  return words.length * delayPerWord;
+};
+
 const generateAudioAndVideo = async (fact, index) => {
   const folderName = `fact_${index}`;
-  const audioUrl = googleTTS.getAudioUrl(fact, {
-    lang: "en",
-    slow: false,
-    host: "https://translate.google.com",
-  });
 
   createFolder(folderName); // Create a new folder for each fact
 
@@ -32,12 +34,10 @@ const generateAudioAndVideo = async (fact, index) => {
   const videoPath = `${folderName}/fact_${index}.mp4`;
 
   const textImagePaths = [];
+  const segments = fact.split("|"); // Use "|" as the separator
 
-  // Split the fact into words
-  const words = fact.split(" ");
-
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i];
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i].trim();
 
     const canvas = createCanvas(1280, 720);
     const ctx = canvas.getContext("2d");
@@ -45,16 +45,12 @@ const generateAudioAndVideo = async (fact, index) => {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.font = "24px sans-serif"; // Use the default sans-serif font
 
-    // Determine text color based on the current word index
-    if (i === 0) {
-      ctx.fillStyle = "yellow"; // Highlighted word color
-    } else {
-      ctx.fillStyle = "white"; // Other words color
-    }
+    // Determine text color based on the current segment
+    ctx.fillStyle = "yellow"; // Highlighted segment color
 
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(word, canvas.width / 2, canvas.height / 2);
+    ctx.fillText(segment, canvas.width / 2, canvas.height / 2);
 
     const frameImagePath = `${folderName}/frame_${i}.png`;
     await new Promise((resolve) => {
@@ -66,15 +62,24 @@ const generateAudioAndVideo = async (fact, index) => {
     textImagePaths.push(frameImagePath);
   }
 
-  const audioResponse = await fetch(audioUrl);
-  const audioBuffer = await audioResponse.arrayBuffer();
-  fs.writeFileSync(audioPath, Buffer.from(audioBuffer));
+  // Use node-gtts to generate audio
+  await new Promise((resolve, reject) => {
+    const audioStream = gtts.stream(fact);
+    const audioFile = fs.createWriteStream(audioPath);
+    audioStream.pipe(audioFile);
+    audioFile.on("finish", resolve);
+    audioFile.on("error", reject);
+  });
+
+  // Calculate the frame delay based on the number of words in the first segment
+  const firstSegmentWords = segments[0].trim().split(" ");
+  const frameDelay = calculateFrameDelay(firstSegmentWords);
 
   // Create a GIF directly from the text images using jimp
   const gif = new GIFEncoder(1280, 720);
   gif.createReadStream().pipe(fs.createWriteStream(gifPath)); // Create GIF stream
   gif.setRepeat(0); // 0 for repeat, -1 for no-repeat
-  gif.setDelay(200); // frame delay in ms
+  gif.setDelay(frameDelay); // Set the frame delay based on word count
   gif.start();
 
   for (const frameImagePath of textImagePaths) {
