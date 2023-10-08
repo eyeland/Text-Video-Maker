@@ -6,7 +6,7 @@ const Jimp = require("jimp");
 const gtts = require("node-gtts")("en"); // Replace "en" with your desired language code
 
 const facts = [
-  "Fact 1: | Honey never spoils | Archaeologists have found | pots of honey in |ancient Egyptian tombs | that are over | 3,000 years old | and still perfectly | edible.",
+  "Fact: 1 | The key is to keep | company only with people | who uplift you, | whose presence calls | forth your best. | - Epictetus",
 
   // ... Add more facts
 ];
@@ -19,7 +19,7 @@ const createFolder = (folderName) => {
 
 const calculateFrameDelay = (words) => {
   // Calculate the frame delay based on the number of words
-  const wordsPerSecond = 1.4; // Adjust this value as needed
+  const wordsPerSecond = 1.6; // Adjust this value as needed
   const delayPerWord = 1000 / wordsPerSecond;
   return words.length * delayPerWord;
 };
